@@ -52,10 +52,10 @@ def insertionSort(array):
 
 
 def get_run_time_merge(input_arr):
-    array = copy.deepcopy(input_arr)
     time_start = time.time()
-    run_iters = 1
+    run_iters = 100
     for i in range(run_iters):
+        array = copy.deepcopy(input_arr)
         mergeSort(array)
     time_end = time.time()
     run_time_merge = time_end - time_start
@@ -63,87 +63,95 @@ def get_run_time_merge(input_arr):
 
 
 def get_run_time_insert(input_arr):
-    array = copy.deepcopy(input_arr)
     time_start_ = time.time()
-    run_iters = 1
+    run_iters = 100
     for i in range(run_iters):
+        array = copy.deepcopy(input_arr)
         insertionSort(array)
     time_end_ = time.time()
     run_time_insert = time_end_ - time_start_
     return run_time_insert / run_iters
 
 
-"""
-get the range of potential cross points
-"""
+def run_experiments():
+    """
+    get the range of potential cross points
+    """
 
-start_num = 2
-incremental_step = 5
-end_num = start_num + incremental_step
-split_point = None
-run_flag = True
-loop_idx = 1
-sample_list = random.sample(range(10), 2)
+    start_num = 2
+    incremental_step = 5
+    end_num = start_num + incremental_step
+    split_point = None
+    run_flag = True
+    loop_idx = 1
+    sample_list = random.sample(range(10000), 1000)
+    np.savetxt("sample_input",sample_list)
+    num_list = []
+    merge_sort_time, insert_sort_time = [], []
+    while run_flag:
+        num_list.append(start_num)
+        run_time_merge = get_run_time_merge(sample_list[:start_num])
+        merge_sort_time.append(run_time_merge)
+        run_time_insert = get_run_time_insert(sample_list[:start_num])
+        insert_sort_time.append(run_time_insert)
+        if run_time_merge <= run_time_insert:
+            print("run time\t", run_time_merge, run_time_insert)
+            split_point = start_num
+            run_flag = False
+        if loop_idx >= 100:
+            run_flag = False
+        print(start_num, "\tmerge:\t", run_time_merge, "\tinsert:\t", run_time_insert)
+        start_num += incremental_step * loop_idx
 
-num_list = []
-merge_sort_time, insert_sort_time = [], []
-while run_flag:
-    num_list.append(start_num)
-    sample_list.extend(random.sample(range(0, 10000), start_num - len(sample_list)))
+        end_num = start_num + incremental_step * loop_idx
+        loop_idx += 1
 
-    run_time_merge = get_run_time_merge(sample_list)
+    """
+    draw the graph 
+    """
+    print(split_point)
+    plt.plot(num_list, merge_sort_time, color="r", label="merge sort")
+    plt.plot(num_list, insert_sort_time, color="g", label="insertion sort")
+    plt.xlabel("number of input size n")
+    plt.ylabel("run time")
+    plt.legend()
+    plt.show()
 
-    merge_sort_time.append(run_time_merge)
-    run_time_insert = get_run_time_insert(sample_list)
-    insert_sort_time.append(run_time_insert)
-    if run_time_merge <= run_time_insert:
-        print("run time\t", run_time_merge, run_time_insert)
-        split_point = start_num
-        run_flag = False
-    if loop_idx >= 100:
-        run_flag = False
-    print(start_num, "\tmerge:\t", run_time_merge, "\tinsert:\t", run_time_insert)
-    start_num += incremental_step * loop_idx
-
-    end_num = start_num + incremental_step * loop_idx
-    loop_idx += 1
-
-"""
-draw the graph 
-"""
-print(split_point)
-plt.plot(num_list, merge_sort_time, color="r", label="merge sort")
-plt.plot(num_list, insert_sort_time, color="g", label="insertion sort")
-plt.xlabel("number of input size n")
-plt.ylabel("run time")
-plt.legend()
-plt.show()
-
-"""
-get the exact n where insert sort is better than merge sort
-"""
-left_, right_ = num_list[-2], split_point
-run_time_merge, run_time_insert = 0, 0
-idx_ = int((left_ + right_) / 2)
-while left_ < right_ - 1:
+    """
+    get the exact n where insert sort is better than merge sort
+    """
+    left_, right_ = num_list[-2], split_point
+    run_time_merge, run_time_insert = 0, 0
     idx_ = int((left_ + right_) / 2)
+    while left_ < right_ - 1:
+        idx_ = int((left_ + right_) / 2)
 
-    # if random.randint(0,100)>98:
-    #    print("left and right\t",left_, right_)
-    run_time_merge = get_run_time_merge(sample_list[:idx_])
-    run_time_insert = get_run_time_insert(sample_list[:idx_])
-    print(idx_, left_, right_, run_time_merge > run_time_insert, run_time_merge, run_time_insert)
-    if abs(run_time_merge - run_time_insert) < 1e-7:
-        print("small enough answer:\t", idx_, run_time_insert, run_time_merge)
-        break
+        # if random.randint(0,100)>98:
+        #    print("left and right\t",left_, right_)
+        run_time_merge = get_run_time_merge(sample_list[:idx_])
+        run_time_insert = get_run_time_insert(sample_list[:idx_])
+        print(idx_, left_, right_, run_time_merge > run_time_insert, run_time_merge, run_time_insert)
+        if abs(run_time_merge - run_time_insert) < 1e-7:
+            print("small enough answer:\t", idx_, run_time_insert, run_time_merge)
+            break
 
-    if run_time_insert > run_time_merge:
-        right_ = idx_
-    else:
-        left_ = idx_
+        if run_time_insert > run_time_merge:
+            right_ = idx_
+        else:
+            left_ = idx_
 
-print('approximate answer\t', idx_, run_time_insert, run_time_merge)
+    print('approximate answer\t', idx_, run_time_insert, run_time_merge)
+    return idx_
 
-import numpy as np
 
-np.savetxt("samples_Q1", np.asarray(sample_list))
+if __name__ == "__main__":
+    import numpy as np
+
+    potenial_idx = []
+    run_experiments()
+    cal_mean_flag=False
+    if cal_mean_flag:
+        for i in range(500):
+            potenial_idx.append(run_experiments())
+        print(np.mean(potenial_idx), np.var(potenial_idx))
+
