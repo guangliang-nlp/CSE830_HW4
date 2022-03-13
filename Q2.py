@@ -92,7 +92,7 @@ input = load_sample_input("sample_input")
 """
 # n = 200
 
-for n in [10, 50, 100, 150, 200, 250]:
+for n in [20, 30, 40, 50, 60, 70, 80, 90]:
     input_k_list = []
     run_time_merge_modify_list, run_time_merge_list, run_time_insert_list = [], [], []
 
